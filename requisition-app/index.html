@@ -1,0 +1,2388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kama Companies – Requisition & Calendar System</title>
+  <style>
+    :root {
+      --primary: #f2c300;
+      --primary-dark: #d5a900;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --bg: #f5f4ed;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #66645e;
+      --border: #deddd5;
+      --radius: 10px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.09), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: #111111;
+      color: white;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .logo span { font-size: 1.5rem; }
+    nav { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    nav button {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.35);
+      color: white;
+      padding: 0.4rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    nav button:hover, nav button.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #111111;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+    .badge-role {
+      background: var(--primary);
+      color: #111111;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+    /* Main layout */
+    main {
+      max-width: 1200px;
+      margin: 1.5rem auto;
+      padding: 0 1rem 3rem;
+    }
+
+    /* Cards & sections */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Stats row */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.1rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--text); }
+    .stat-card .label { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(242, 195, 0, 0.28);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .full-width { grid-column: 1 / -1; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #111111; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: #047857; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: var(--bg); }
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+
+    /* Filters bar */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: flex-end;
+    }
+    .filters .filter-group { min-width: 140px; }
+    .filters label { margin-bottom: 0.2rem; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.75rem 0.9rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f3f2ec;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    tr:hover td { background: #fbf7df; }
+
+    /* Status badges */
+    .status {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-pending_manager, .status-pending_finance { background: #fef3c7; color: #754600; }
+    .status-needs_revision { background: #ffedd5; color: #9a3412; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+
+    /* Login screen */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #111111 0%, #222015 68%, #c9a500 100%);
+      padding: 1rem;
+    }
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    }
+    .login-card h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+      text-align: center;
+    }
+    .login-card p {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 1.8rem;
+      font-size: 0.95rem;
+    }
+    .login-card .form-group { margin-bottom: 1.1rem; }
+    .auth-switch { margin-top: 1rem; text-align: center; font-size: 0.9rem; }
+    .auth-switch button {
+      background: none;
+      border: 0;
+      color: #705900;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Calendar */
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .calendar-header h3 { font-size: 1.15rem; }
+    .cal-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .calendar-tools { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+    .calendar-filters { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; }
+    .calendar-view-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .calendar-view-switch button { border: 0; border-right: 1px solid var(--border); border-radius: 0; }
+    .calendar-view-switch button:last-child { border-right: 0; }
+    .calendar-view-switch button.active { background: #111; color: #fff; }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .cal-day-name {
+      background: #f3f2ec;
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .cal-day {
+      background: white;
+      min-height: 90px;
+      padding: 0.4rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cal-day:hover { background: #fbf7df; }
+    .cal-day.other-month { background: #f3f2ec; color: #aaa89f; }
+    .cal-day.today { background: #fff4bd; }
+    .cal-day .day-num {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .cal-event {
+      font-size: 0.7rem;
+      background: #f8e58b;
+      color: #332900;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .cal-event.activity { background: #d1fae5; color: #065f46; }
+    .cal-event.leave { background: #fef3c7; color: #92400e; }
+    .cal-event.meeting { background: #e0f2fe; color: #075985; }
+    .calendar-period { display: grid; gap: 0.65rem; }
+    .calendar-period.week { grid-template-columns: repeat(7, minmax(125px, 1fr)); overflow-x: auto; }
+    .calendar-period.day { grid-template-columns: minmax(0, 1fr); }
+    .calendar-period-day { background: var(--card); border: 1px solid var(--border); border-radius: 6px; min-height: 120px; padding: 0.7rem; }
+    .calendar-period.day .calendar-period-day { min-height: 320px; }
+    .calendar-period-day h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .calendar-period-day .cal-event { white-space: normal; padding: 0.35rem 0.5rem; }
+    .calendar-add { margin-top: 0.5rem; padding: 0.2rem 0.45rem; border: 1px solid var(--border); border-radius: 4px; background: transparent; cursor: pointer; }
+    .budget-track { height: 9px; border-radius: 5px; background: var(--border); overflow: hidden; }
+    .budget-track span { display: block; height: 100%; background: var(--primary-dark); }
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .attachment-list { margin-top: 0.4rem; padding-left: 1.2rem; }
+    .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .analytics-item { padding: 0.75rem; background: var(--bg); border-radius: 6px; }
+    body[data-theme="dark"] { --bg: #191919; --card: #242424; --text: #f2f0e8; --muted: #c2bfb6; --border: #45433e; color-scheme: dark; }
+    body[data-theme="dark"] input, body[data-theme="dark"] select, body[data-theme="dark"] textarea { background: #303030; color: #f2f0e8; }
+    body[data-theme="dark"] th, body[data-theme="dark"] .cal-day-name { background: #303030; }
+    body[data-theme="dark"] tr:hover td, body[data-theme="dark"] .cal-day:hover { background: #373426; }
+    body[data-theme="dark"] .cal-day, body[data-theme="dark"] .calendar-period-day { background: var(--card); }
+    body[data-theme="dark"] .cal-day.other-month, body[data-theme="dark"] .analytics-item { background: #303030; }
+    body[data-theme="dark"] .cal-day.today { background: #514615; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    }
+    .modal h3 { margin-bottom: 1rem; color: var(--text); }
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1e293b;
+      color: white;
+      padding: 0.85rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 300;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--success); }
+    #toast.error { background: var(--danger); }
+
+    .hidden { display: none !important; }
+    .mt-1 { margin-top: 0.5rem; }
+    .mt-2 { margin-top: 1rem; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+    .text-muted { color: var(--muted); font-size: 0.85rem; }
+
+    /* ========== PRINT STYLES ========== */
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+      }
+      header, nav, .btn, .filters, #toast, .modal-overlay { display: none !important; }
+      .no-print { display: none !important; }
+    }
+
+    /* Print layout (used when generating printable view) */
+    .print-sheet {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #111;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .print-sheet .print-header {
+      text-align: center;
+      border-bottom: 2px solid #d5a900;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .print-sheet .print-header h1 {
+      font-size: 1.4rem;
+      color: #171717;
+      margin-bottom: 4px;
+    }
+    .print-sheet .print-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 24px;
+      margin-bottom: 18px;
+      font-size: 0.95rem;
+    }
+    .print-sheet .print-meta strong { color: #334155; }
+    .print-sheet .print-section {
+      margin-bottom: 16px;
+    }
+    .print-sheet .print-section h3 {
+      font-size: 0.95rem;
+      color: #171717;
+      border-bottom: 1px solid #deddd5;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+    }
+    .print-sheet .print-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .print-sheet .print-status.approved { background: #d1fae5; color: #065f46; }
+    .print-sheet .print-footer {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      font-size: 0.9rem;
+    }
+    .print-sheet .sign-line {
+      border-top: 1px solid #94a3b8;
+      margin-top: 50px;
+      padding-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>📋 Kama Companies</h1>
+      <p>Kama Companies – Request & activity management</p>
+
+      <div id="signin-panel">
+        <form id="signin-form" onsubmit="doLogin(event)">
+          <div class="form-group">
+            <label for="login-username">Username</label>
+            <input type="text" id="login-username" autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Sign In</button>
+        </form>
+        <div class="auth-switch">New here? <button type="button" onclick="showAuthForm('signup')">Create an account</button></div>
+      </div>
+
+      <div id="signup-panel" class="hidden">
+        <form id="signup-form" onsubmit="createAccount(event)">
+          <div class="form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" autocomplete="name" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-dept">Department</label>
+            <select id="signup-dept" required>
+              <option value="">-- Select department --</option>
+              <option value="Sales">Sales</option>
+              <option value="R and D">R and D</option>
+              <option value="Executive">Executive</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="signup-username">Username</label>
+            <input type="text" id="signup-username" autocomplete="username" minlength="3" maxlength="40" pattern="(?:[A-Za-z0-9._]|-)+" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-role">Account Type</label>
+            <select id="signup-role" required>
+              <option value="employee">Employee</option>
+              <option value="manager">Manager / Approver (demo)</option>
+              <option value="admin">Admin (demo)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password (3 digits)</label>
+            <input type="password" id="signup-password" autocomplete="new-password" inputmode="numeric" minlength="3" maxlength="3" pattern="[0-9]{3}" required />
+          </div>
+          <div class="form-group">
+            <label for="signup-confirm-password">Confirm Password</label>
+            <input type="password" id="signup-confirm-password" autocomplete="new-password" inputmode="numeric" minlength="3" maxlength="3" pattern="[0-9]{3}" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Create Account</button>
+        </form>
+        <div class="auth-switch">Already registered? <button type="button" onclick="showAuthForm('signin')">Sign in</button></div>
+      </div>
+
+      <p class="text-muted mt-2" style="text-align:center;font-size:0.8rem">
+        Demo accounts and data are stored in this browser only. Account roles are not secure for production use.
+      </p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="hidden">
+    <header>
+      <div class="logo"><span>📋</span> Kama Companies</div>
+      <nav id="main-nav">
+        <button class="active" data-section="dashboard" onclick="showSection('dashboard')">Dashboard</button>
+        <button data-section="new-request" onclick="showSection('new-request')">New Request</button>
+        <button data-section="my-requests" onclick="showSection('my-requests')">My Requests</button>
+        <button data-section="calendar" onclick="showSection('calendar')">Calendar</button>
+        <button data-section="notifications" onclick="showSection('notifications')">Inbox <span id="notification-count" class="badge-role hidden"></span></button>
+        <button data-section="activity" onclick="showSection('activity')">Activity Log</button>
+        <button data-section="settings" onclick="showSection('settings')">Settings</button>
+        <button data-section="admin" id="nav-admin" class="hidden" onclick="showSection('admin')">Approvals</button>
+        <button data-section="print" id="nav-print" class="hidden" onclick="showSection('print')">Print Approved</button>
+      </nav>
+      <div class="user-info">
+        <span id="display-name"></span>
+        <span class="badge-role" id="display-role"></span>
+        <button class="btn-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- DASHBOARD -->
+      <section id="section-dashboard" class="section active">
+        <div class="stats" id="stats-row"></div>
+        <div class="card" id="analytics-card">
+          <h2>📊 Spending & Budget</h2>
+          <div id="analytics-summary" class="analytics-grid"></div>
+        </div>
+        <div class="card">
+          <h2>📌 Recent Requests</h2>
+          <div id="recent-requests" class="table-wrap"></div>
+        </div>
+        <div class="card">
+          <h2>📅 Upcoming Activities</h2>
+          <div id="upcoming-activities"></div>
+        </div>
+      </section>
+
+      <!-- NEW REQUEST -->
+      <section id="section-new-request" class="section">
+        <div class="card">
+          <h2>➕ Submit New Requisition</h2>
+          <form id="request-form" onsubmit="submitRequest(event)">
+            <div class="form-grid">
+              <div>
+                <label>Request Type *</label>
+                <select id="req-type" required onchange="renderRequestTypeFields()">
+                  <option value="">-- Select type --</option>
+                  <option value="Food expenses">Food expenses</option>
+                  <option value="Human resources">Human resources</option>
+                  <option value="Sales and marketing">Sales and marketing</option>
+                  <option value="Technology and hosting">Technology and hosting</option>
+                  <option value="Fuel and transport">Fuel and transport</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+              <div id="type-specific-fields" class="full-width"></div>
+              <div>
+                <label>Priority *</label>
+                <select id="req-priority" required>
+                  <option value="Normal">Normal</option>
+                  <option value="High">High</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+              <div class="full-width">
+                <label>Title / Short Description *</label>
+                <input type="text" id="req-title" required placeholder="e.g. Need 50 reams of A4 paper" />
+              </div>
+              <div class="full-width">
+                <label>Detailed Description *</label>
+                <textarea id="req-details" required placeholder="Explain what is needed, why, quantity, preferred supplier, dates, etc."></textarea>
+              </div>
+              <div>
+                <label>Quantity / Amount</label>
+                <input type="text" id="req-qty" placeholder="e.g. 20 units or $500" />
+              </div>
+              <div>
+                <label>Estimated Cost</label>
+                <input type="number" id="req-cost" min="0" step="0.01" placeholder="e.g. 1500" oninput="renderBudgetHint()" />
+                <p id="budget-indicator" class="text-muted mt-1"></p>
+              </div>
+              <div>
+                <label>Needed By (Date)</label>
+                <input type="date" id="req-date" />
+              </div>
+              <div class="full-width">
+                <label>Attachment / Reference Notes</label>
+                <textarea id="req-attachment" placeholder="List any supporting documents, quote numbers, links, or reference IDs (e.g. Quote #Q-8842, Invoice draft attached via email)"></textarea>
+              </div>
+              <div class="full-width">
+                <label for="req-files">Supporting Files (up to 3 files, 512 KB each)</label>
+                <input type="file" id="req-files" multiple accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xlsx,.csv" />
+              </div>
+            </div>
+            <div class="mt-2">
+              <button type="submit" class="btn btn-primary">Submit Request</button>
+              <button type="button" class="btn btn-outline hidden" id="cancel-revision" onclick="cancelRequestRevision()">Cancel Revision</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="section-settings" class="section">
+        <div class="card">
+          <h2>Profile & Preferences</h2>
+          <form id="profile-form" onsubmit="saveProfile(event)">
+            <div class="settings-grid">
+              <div><label for="profile-name">Full Name</label><input id="profile-name" required maxlength="100" /></div>
+              <div><label for="profile-dept">Department</label><select id="profile-dept" required><option>Sales</option><option>R and D</option><option>Executive</option><option>Engineering</option><option>Finance</option></select></div>
+              <div><label for="profile-theme">Theme</label><select id="profile-theme" onchange="savePreferences()"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+              <div><label for="profile-currency">Currency</label><select id="profile-currency" onchange="savePreferences()"><option value="USD">USD</option><option value="GHS">GHS</option><option value="KES">KES</option><option value="NGN">NGN</option><option value="ZAR">ZAR</option></select></div>
+            </div>
+            <label class="mt-1"><input type="checkbox" id="profile-notifications" style="width:auto" onchange="savePreferences()" /> Enable browser notifications on this device</label>
+            <button class="btn btn-primary mt-1" type="submit">Save Profile</button>
+          </form>
+        </div>
+        <div class="card">
+          <h2>Change Password</h2>
+          <form id="password-form" onsubmit="changePassword(event)">
+            <div class="settings-grid">
+              <div><label for="current-password">Current Password</label><input id="current-password" type="password" inputmode="numeric" required /></div>
+              <div><label for="new-password">New Password (3 digits)</label><input id="new-password" type="password" inputmode="numeric" minlength="3" maxlength="3" pattern="[0-9]{3}" required /></div>
+              <div><label for="confirm-new-password">Confirm New Password</label><input id="confirm-new-password" type="password" inputmode="numeric" minlength="3" maxlength="3" pattern="[0-9]{3}" required /></div>
+            </div>
+            <button class="btn btn-outline mt-1" type="submit">Update Password</button>
+          </form>
+        </div>
+        <div class="card" id="budget-settings-card">
+          <h2>Department Budgets</h2>
+          <p class="text-muted mb-1">Demo budgets are stored in this browser. Only Admin accounts can edit them.</p>
+          <form id="budget-form" onsubmit="saveBudgets(event)">
+            <div id="budget-settings" class="settings-grid"></div>
+            <button id="save-budgets-button" class="btn btn-primary mt-1" type="submit">Save Budgets</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="section-notifications" class="section">
+        <div class="card">
+          <div class="flex-between"><h2>Inbox</h2><button class="btn btn-outline btn-sm" onclick="markAllNotificationsRead()">Mark all read</button></div>
+          <div id="notification-list"></div>
+        </div>
+      </section>
+
+      <section id="section-activity" class="section">
+        <div class="card">
+          <h2>Activity Log</h2>
+          <div id="audit-log-list" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <!-- MY REQUESTS -->
+      <section id="section-my-requests" class="section">
+        <div class="card">
+          <h2>📄 My Requests</h2>
+          <div class="filters">
+            <div class="filter-group">
+              <label>Status</label>
+              <select id="my-filter-status" onchange="renderMyRequests()">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="pending_manager">Pending Manager</option>
+                <option value="pending_finance">Pending Finance</option>
+                <option value="needs_revision">Needs Revision</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Type</label>
+              <select id="my-filter-type" onchange="renderMyRequests()">
+                <option value="">All types</option>
+                <option value="Food expenses">Food expenses</option>
+                <option value="Human resources">Human resources</option>
+                <option value="Sales and marketing">Sales and marketing</option>
+                <option value="Technology and hosting">Technology and hosting</option>
+                <option value="Fuel and transport">Fuel and transport</option>
+                <option value="Others">Others</option>
+                  <option value="Purchase requisition">Purchase requisition</option>
+                  <option value="Leave request">Leave request</option>
+                  <option value="Equipment / asset request">Equipment / asset request</option>
+                  <option value="Travel expense">Travel expense</option>
+              </select>
+            </div>
+          </div>
+          <div id="my-requests-list" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section id="section-calendar" class="section">
+        <div class="card">
+          <div class="calendar-header">
+            <h2>📅 Shared Activity Calendar</h2>
+            <div class="cal-nav">
+              <button class="btn btn-outline btn-sm" onclick="changeCalendarPeriod(-1)" aria-label="Previous period">← Prev</button>
+              <h3 id="cal-month-label" style="min-width:160px;text-align:center"></h3>
+              <button class="btn btn-outline btn-sm" onclick="changeCalendarPeriod(1)" aria-label="Next period">Next →</button>
+              <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ Add Activity</button>
+            </div>
+          </div>
+          <div class="calendar-tools">
+            <div class="calendar-view-switch" role="group" aria-label="Calendar view">
+              <button class="btn btn-outline btn-sm active" data-calendar-view="month" onclick="setCalendarView('month')">Month</button>
+              <button class="btn btn-outline btn-sm" data-calendar-view="week" onclick="setCalendarView('week')">Week</button>
+              <button class="btn btn-outline btn-sm" data-calendar-view="day" onclick="setCalendarView('day')">Day</button>
+            </div>
+            <div class="calendar-filters">
+              <div class="filter-group"><label for="calendar-filter-dept">Department</label>
+                <select id="calendar-filter-dept" onchange="renderCalendar()">
+                  <option value="">All departments</option><option>Sales</option><option>R and D</option><option>Executive</option><option>Engineering</option><option>Finance</option>
+                </select>
+              </div>
+              <div class="filter-group"><label for="calendar-filter-type">Event type</label>
+                <select id="calendar-filter-type" onchange="renderCalendar()">
+                  <option value="">All types</option><option value="activity">General Activity</option><option value="leave">Leave / Time Off</option><option value="meeting">Meeting</option><option value="other">Other</option>
+                </select>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="exportCalendarICS()">Export .ics</button>
+            </div>
+          </div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+          <p class="text-muted mt-1">Click a day to add an activity. Click an existing event to view or delete.</p>
+        </div>
+        <div class="card">
+          <h2 id="calendar-event-list-title">📋 Activity Schedule</h2>
+          <div id="month-events-list"></div>
+        </div>
+      </section>
+
+      <!-- ADMIN PANEL -->
+      <section id="section-admin" class="section">
+        <div class="card">
+          <h2>🛡️ Pending Approvals</h2>
+          <div id="admin-pending" class="table-wrap"></div>
+        </div>
+        <div class="card">
+          <div class="flex-between">
+            <h2>📊 All Requests (History)</h2>
+          </div>
+          <div class="filters">
+            <div class="filter-group">
+              <label>Department</label>
+              <select id="admin-filter-dept" onchange="renderAdmin()">
+                <option value="">All departments</option>
+                <option value="Sales">Sales</option>
+                <option value="R and D">R and D</option>
+                <option value="Executive">Executive</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Status</label>
+              <select id="admin-filter-status" onchange="renderAdmin()">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="pending_manager">Pending Manager</option>
+                <option value="pending_finance">Pending Finance</option>
+                <option value="needs_revision">Needs Revision</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Type</label>
+              <select id="admin-filter-type" onchange="renderAdmin()">
+                <option value="">All types</option>
+                <option value="Food expenses">Food expenses</option>
+                <option value="Human resources">Human resources</option>
+                <option value="Sales and marketing">Sales and marketing</option>
+                <option value="Technology and hosting">Technology and hosting</option>
+                <option value="Fuel and transport">Fuel and transport</option>
+                <option value="Others">Others</option>
+                  <option value="Purchase requisition">Purchase requisition</option>
+                  <option value="Leave request">Leave request</option>
+                  <option value="Equipment / asset request">Equipment / asset request</option>
+                  <option value="Travel expense">Travel expense</option>
+              </select>
+            </div>
+          </div>
+          <div id="admin-all" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <!-- PRINT APPROVED -->
+      <section id="section-print" class="section">
+        <div class="card no-print">
+          <h2>🖨️ Print Approved Requests</h2>
+          <p class="text-muted" style="margin-bottom:1rem">Select an approved request to generate a printable document (with signature lines).</p>
+          <div class="filters">
+            <div class="filter-group">
+              <label>Department</label>
+              <select id="print-filter-dept" onchange="renderPrintList()">
+                <option value="">All departments</option>
+                <option value="Sales">Sales</option>
+                <option value="R and D">R and D</option>
+                <option value="Executive">Executive</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
+          </div>
+          <div id="print-list" class="table-wrap"></div>
+        </div>
+
+        <!-- This area becomes visible for printing -->
+        <div id="print-area" class="hidden"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- EVENT MODAL -->
+  <div class="modal-overlay" id="event-modal">
+    <div class="modal">
+      <h3 id="event-modal-title">Add Activity</h3>
+      <form id="event-form" onsubmit="saveEvent(event)">
+        <div style="margin-bottom:1rem">
+          <label>Title *</label>
+          <input type="text" id="event-title" required placeholder="e.g. Team meeting, Site visit..." />
+        </div>
+        <div style="margin-bottom:1rem">
+          <label>Date *</label>
+          <input type="date" id="event-date" required />
+        </div>
+        <div style="margin-bottom:1rem">
+          <label>Type</label>
+          <select id="event-type">
+            <option value="activity">General Activity</option>
+            <option value="leave">Leave / Time Off</option>
+            <option value="meeting">Meeting</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem">
+          <label>Description</label>
+          <textarea id="event-desc" placeholder="Optional details..."></textarea>
+        </div>
+        <input type="hidden" id="event-id" />
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeEventModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APPROVE / REJECT MODAL -->
+  <div class="modal-overlay" id="action-modal">
+    <div class="modal">
+      <h3 id="action-modal-title">Take Action</h3>
+      <p id="action-req-info" class="text-muted" style="margin-bottom:1rem"></p>
+      <div id="action-req-details" style="background:#f3f2ec;padding:0.75rem;border-radius:6px;margin-bottom:1rem;font-size:0.9rem"></div>
+      <div style="margin-bottom:1rem">
+        <label>Comment (optional)</label>
+        <textarea id="action-comment" placeholder="Reason for approval or rejection..."></textarea>
+      </div>
+      <input type="hidden" id="action-req-id" />
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeActionModal()">Cancel</button>
+        <button type="button" class="btn btn-outline" onclick="processAction('needs_revision')">Needs Revision</button>
+        <button type="button" class="btn btn-danger" onclick="processAction('rejected')">Reject</button>
+        <button type="button" class="btn btn-success" onclick="processAction('approved')">Approve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW EVENT MODAL -->
+  <div class="modal-overlay" id="view-event-modal">
+    <div class="modal">
+      <h3 id="view-event-title"></h3>
+      <p id="view-event-meta" class="text-muted"></p>
+      <p id="view-event-desc" style="margin-top:0.75rem"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeViewEventModal()">Close</button>
+        <button type="button" class="btn btn-danger" onclick="deleteEvent()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW REQUEST DETAIL MODAL -->
+  <div class="modal-overlay" id="view-req-modal">
+    <div class="modal">
+      <h3 id="view-req-title"></h3>
+      <div id="view-req-body" style="font-size:0.95rem"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeViewReqModal()">Close</button>
+        <button type="button" class="btn btn-outline hidden" id="btn-revise-request" onclick="reviseRequest()">Revise Request</button>
+        <button type="button" class="btn btn-primary" id="btn-print-single" onclick="printSingleRequest()">🖨️ Print</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // ========== STATE ==========
+    let currentUser = null;
+    let currentRole = null;
+    let calYear, calMonth;
+    let calFocus = new Date();
+    let calendarView = 'month';
+    let viewingEventId = null;
+    let viewingReqId = null;
+    let editingRequestId = null;
+
+    // ========== DEPARTMENT → CATEGORY MAPPING ==========
+    // Hard rules: only these categories are allowed per department
+    const DEPT_CATEGORY_MAP = {
+      "Sales": [
+        "Sales and marketing",
+        "Food expenses",
+        "Fuel and transport",
+        "Others"
+      ],
+      "R and D": [
+        "Technology and hosting",
+        "Human resources",
+        "Fuel and transport",
+        "Others"
+      ],
+      "Executive": [
+        "Food expenses",
+        "Human resources",
+        "Sales and marketing",
+        "Technology and hosting",
+        "Fuel and transport",
+        "Others"
+      ],
+      "Engineering": [
+        "Technology and hosting",
+        "Fuel and transport",
+        "Human resources",
+        "Others"
+      ],
+      "Finance": [
+        "Food expenses",
+        "Human resources",
+        "Sales and marketing",
+        "Technology and hosting",
+        "Fuel and transport",
+        "Others"
+      ]
+    };
+    const GENERAL_REQUEST_TYPES = [
+      'Purchase requisition',
+      'Leave request',
+      'Equipment / asset request',
+      'Travel expense'
+    ];
+
+    /**
+     * Validate that category is allowed for the department.
+     * @returns {{ valid: boolean, message: string }}
+     */
+    function validateDepartmentCategory(department, category) {
+      if (!department) {
+        return { valid: false, message: "Please select a department." };
+      }
+      if (!category) {
+        return { valid: false, message: "Please select a category." };
+      }
+      const allowed = DEPT_CATEGORY_MAP[department];
+      if (!allowed) {
+        return { valid: false, message: "Unknown department: " + department };
+      }
+      if (!allowed.includes(category) && !GENERAL_REQUEST_TYPES.includes(category)) {
+        return {
+          valid: false,
+          message: '"' + category + '" is not allowed for the ' + department +
+                   ' department. Allowed: ' + allowed.join(', ')
+        };
+      }
+      return { valid: true, message: "OK" };
+    }
+
+    /** Fill the Request Type dropdown with only categories allowed for the logged-in department */
+    function populateCategoryDropdown() {
+      const select = document.getElementById('req-type');
+      if (!select || !currentUser) return;
+      const allowed = [...(DEPT_CATEGORY_MAP[currentUser.dept] || []), ...GENERAL_REQUEST_TYPES];
+      select.innerHTML = '<option value="">-- Select type --</option>';
+      allowed.forEach(function (cat) {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
+      });
+      renderRequestTypeFields();
+    }
+
+    function renderRequestTypeFields(savedValues = {}) {
+      const type = document.getElementById('req-type').value;
+      const fields = {
+        'Purchase requisition': '<div><label for="type-supplier">Supplier / Vendor</label><input id="type-supplier" data-type-field="supplier" value="" /></div><div><label for="type-quote">Quote / Reference Number</label><input id="type-quote" data-type-field="quoteReference" value="" /></div>',
+        'Leave request': '<div><label for="type-leave-start">Leave Start</label><input type="date" id="type-leave-start" data-type-field="startDate" /></div><div><label for="type-leave-end">Leave End</label><input type="date" id="type-leave-end" data-type-field="endDate" /></div>',
+        'Equipment / asset request': '<div><label for="type-asset">Equipment / Asset</label><input id="type-asset" data-type-field="asset" placeholder="Laptop, phone, access card..." /></div><div><label for="type-location">Work Location</label><input id="type-location" data-type-field="location" /></div>',
+        'Travel expense': '<div><label for="type-destination">Destination</label><input id="type-destination" data-type-field="destination" required /></div><div><label for="type-travel-start">Travel Start</label><input type="date" id="type-travel-start" data-type-field="startDate" /></div><div><label for="type-travel-end">Travel End</label><input type="date" id="type-travel-end" data-type-field="endDate" /></div>'
+      };
+      const container = document.getElementById('type-specific-fields');
+      container.innerHTML = fields[type] || '';
+      container.querySelectorAll('[data-type-field]').forEach(input => {
+        input.value = savedValues[input.dataset.typeField] || '';
+      });
+    }
+
+    function collectRequestTypeDetails() {
+      return Object.fromEntries(Array.from(document.querySelectorAll('[data-type-field]')).map(input => [input.dataset.typeField, input.value.trim()]));
+    }
+
+    function renderRequestTypeDetails(request) {
+      if (!request.typeDetails) return '';
+      const labels = { supplier: 'Supplier', quoteReference: 'Quote / Reference', startDate: 'Start Date', endDate: 'End Date', asset: 'Equipment / Asset', location: 'Work Location', destination: 'Destination' };
+      const lines = Object.entries(request.typeDetails).filter(([, value]) => value).map(([key, value]) => `<p><strong>${labels[key] || escapeHtml(key)}:</strong> ${escapeHtml(value)}</p>`);
+      return lines.join('');
+    }
+
+    // ========== STORAGE ==========
+    function load(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch { return fallback; }
+    }
+    function save(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+    function getRequests() { return load('req_requests', []); }
+    function setRequests(arr) { save('req_requests', arr); }
+    function getEvents() { return load('req_events', []); }
+    function setEvents(arr) { save('req_events', arr); }
+    function getAccounts() { return load('req_accounts', []); }
+    function getBudgets() {
+      return load('req_budgets', { Sales: 0, 'R and D': 0, Executive: 0, Engineering: 0, Finance: 0 });
+    }
+    function getUserPreferences(userId = currentUser && currentUser.id) {
+      return load(`req_preferences_${userId}`, { theme: 'light', browserNotifications: false });
+    }
+    function getNotifications() { return load('req_notifications', []); }
+    function getAuditLog() { return load('req_audit_log', []); }
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    // ========== AUTH ==========
+    function showAuthForm(form) {
+      const signingUp = form === 'signup';
+      document.getElementById('signin-panel').classList.toggle('hidden', signingUp);
+      document.getElementById('signup-panel').classList.toggle('hidden', !signingUp);
+    }
+
+    function createPasswordSalt() {
+      return Array.from(window.crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function derivePasswordHash(password, salt) {
+      const key = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+      const bits = await window.crypto.subtle.deriveBits({
+        name: 'PBKDF2',
+        salt: new TextEncoder().encode(salt),
+        iterations: 120000,
+        hash: 'SHA-256'
+      }, key, 256);
+      return Array.from(new Uint8Array(bits), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function createAccount(event) {
+      event.preventDefault();
+      const form = document.getElementById('signup-form');
+      if (!form.reportValidity()) return;
+
+      const name = document.getElementById('signup-name').value.trim();
+      const dept = document.getElementById('signup-dept').value;
+      const username = document.getElementById('signup-username').value.trim().toLowerCase();
+      const role = document.getElementById('signup-role').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+      if (!/^[a-z0-9._-]{3,40}$/.test(username)) {
+        toast('Use 3-40 letters, numbers, dots, dashes, or underscores for the username.', 'error');
+        return;
+      }
+      if (!/^\d{3}$/.test(password)) {
+        toast('Password must be exactly three digits.', 'error');
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast('Passwords do not match.', 'error');
+        return;
+      }
+      if (!window.crypto || !window.crypto.subtle) {
+        toast('Secure password storage is unavailable. Open the app on localhost in a modern browser.', 'error');
+        return;
+      }
+
+      const accounts = getAccounts();
+      if (accounts.some(account => account.username === username)) {
+        toast('That username is already registered.', 'error');
+        return;
+      }
+
+      try {
+        const passwordSalt = createPasswordSalt();
+        const account = {
+          id: uid(),
+          username,
+          name,
+          dept,
+          role,
+          passwordSalt,
+          passwordHash: await derivePasswordHash(password, passwordSalt)
+        };
+        accounts.push(account);
+        save('req_accounts', accounts);
+        form.reset();
+        enterApp(account);
+        toast('Account created. You are signed in.', 'success');
+      } catch {
+        toast('Could not create the account in this browser.', 'error');
+      }
+    }
+
+    async function doLogin(event) {
+      event.preventDefault();
+      const form = document.getElementById('signin-form');
+      if (!form.reportValidity()) return;
+      const username = document.getElementById('login-username').value.trim().toLowerCase();
+      const password = document.getElementById('login-password').value;
+      const account = getAccounts().find(item => item.username === username);
+
+      if (!window.crypto || !window.crypto.subtle) {
+        toast('Secure password storage is unavailable. Open the app on localhost in a modern browser.', 'error');
+        return;
+      }
+      if (!account) {
+        toast('Username or password is incorrect.', 'error');
+        return;
+      }
+
+      try {
+        const passwordHash = await derivePasswordHash(password, account.passwordSalt);
+        if (passwordHash !== account.passwordHash) {
+          toast('Username or password is incorrect.', 'error');
+          return;
+        }
+        form.reset();
+        enterApp(account);
+      } catch {
+        toast('Could not sign in with this browser.', 'error');
+      }
+    }
+
+    function enterApp(account) {
+      currentRole = account.role;
+      currentUser = { id: account.id, username: account.username, name: account.name, dept: account.dept, role: account.role };
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('display-name').textContent = account.name + ' · ' + account.dept;
+      document.getElementById('display-role').textContent = currentRole;
+      applyTheme(getUserPreferences(account.id).theme);
+      renderSettings();
+
+      if (currentRole === 'admin' || currentRole === 'manager') {
+        document.getElementById('nav-admin').classList.remove('hidden');
+      } else {
+        document.getElementById('nav-admin').classList.add('hidden');
+      }
+      if (currentRole === 'admin') {
+        document.getElementById('nav-print').classList.remove('hidden');
+      } else {
+        document.getElementById('nav-print').classList.add('hidden');
+      }
+
+      const now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      calFocus = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      document.getElementById('req-date').min = localDateString();
+
+      // Limit category dropdown to this department's allowed types
+      populateCategoryDropdown();
+
+      showSection('dashboard');
+      refreshAll();
+    }
+
+    function doLogout() {
+      currentUser = null;
+      currentRole = null;
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('signin-form').reset();
+      document.getElementById('signup-form').reset();
+      showAuthForm('signin');
+    }
+
+    // ========== NAVIGATION ==========
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('#main-nav button').forEach(b => {
+        b.classList.toggle('active', b.dataset.section === id);
+      });
+      if (id === 'admin' && !['manager', 'admin'].includes(currentRole)) {
+        showSection('dashboard');
+        return;
+      }
+      if (id === 'print' && currentRole !== 'admin') {
+        showSection('dashboard');
+        return;
+      }
+      if (id === 'dashboard') renderDashboard();
+      if (id === 'my-requests') renderMyRequests();
+      if (id === 'calendar') renderCalendar();
+      if (id === 'admin') renderAdmin();
+      if (id === 'print') renderPrintList();
+      if (id === 'settings') renderSettings();
+      if (id === 'notifications') renderNotifications();
+      if (id === 'activity') renderAuditLog();
+    }
+
+    // ========== REQUESTS ==========
+    async function submitRequest(e) {
+      e.preventDefault();
+
+      const category = document.getElementById('req-type').value;
+      const check = validateDepartmentCategory(currentUser.dept, category);
+      if (!check.valid) {
+        toast(check.message, 'error');
+        return;
+      }
+      const neededBy = document.getElementById('req-date').value;
+      if (neededBy && neededBy < localDateString()) {
+        toast('Needed By must be today or a future date.', 'error');
+        return;
+      }
+      const selectedFiles = Array.from(document.getElementById('req-files').files || []);
+      const existingForRevision = editingRequestId ? getRequests().find(item => item.id === editingRequestId) : null;
+      const savedAttachments = existingForRevision && Array.isArray(existingForRevision.attachments) ? existingForRevision.attachments : [];
+      if (selectedFiles.length + savedAttachments.length > 3 || selectedFiles.some(file => file.size > 512 * 1024) || selectedFiles.reduce((total, file) => total + file.size, 0) > 1024 * 1024) {
+        toast('Attach up to 3 files, max 512 KB each and 1 MB total per request.', 'error');
+        return;
+      }
+      let newAttachments;
+      try {
+        newAttachments = await Promise.all(selectedFiles.map(readAttachmentFile));
+      } catch {
+        toast('One of the selected files could not be read.', 'error');
+        return;
+      }
+
+      const requests = getRequests();
+      const existing = editingRequestId ? requests.find(item => item.id === editingRequestId) : null;
+      if (editingRequestId && (!existing || existing.requesterId !== currentUser.id)) {
+        toast('This request can no longer be revised.', 'error');
+        cancelRequestRevision();
+        return;
+      }
+      const now = new Date().toISOString();
+      const req = {
+        id: existing ? existing.id : uid(),
+        type: category,
+        typeDetails: collectRequestTypeDetails(),
+        priority: document.getElementById('req-priority').value,
+        title: document.getElementById('req-title').value.trim(),
+        details: document.getElementById('req-details').value.trim(),
+        quantity: document.getElementById('req-qty').value.trim(),
+        estimatedCost: document.getElementById('req-cost').value.trim(),
+        neededBy,
+        attachmentNotes: document.getElementById('req-attachment').value.trim(),
+        attachments: [...savedAttachments, ...newAttachments],
+        requester: existing ? existing.requester : currentUser.name,
+        requesterId: existing ? existing.requesterId : currentUser.id,
+        department: existing ? existing.department : currentUser.dept,
+        status: 'pending_manager',
+        createdAt: existing ? existing.createdAt : now,
+        history: [...(existing && Array.isArray(existing.history) ? existing.history : []), {
+          status: 'pending_manager',
+          actor: currentUser.name,
+          at: now,
+          comment: existing ? 'Revised and resubmitted' : 'Submitted'
+        }],
+        actionComment: '',
+        actionBy: '',
+        actionAt: ''
+      };
+      const requestIndex = requests.findIndex(item => item.id === req.id);
+      if (requestIndex >= 0) requests[requestIndex] = req;
+      else requests.unshift(req);
+      setRequests(requests);
+      addAuditLog(existing ? 'Request revised' : 'Request submitted', req.title, req.id, req.requesterId);
+      notifyRequestParticipants(req, existing ? 'Request revised' : 'New requisition', `${req.title} is waiting for Manager review.`);
+      document.getElementById('request-form').reset();
+      document.getElementById('req-files').value = '';
+      const wasRevision = Boolean(existing);
+      editingRequestId = null;
+      document.getElementById('cancel-revision').classList.add('hidden');
+      document.querySelector('#request-form button[type="submit"]').textContent = 'Submit Request';
+      toast(wasRevision ? 'Revised request resubmitted.' : 'Request submitted for manager approval.', 'success');
+      showSection('my-requests');
+    }
+
+    function openActionModal(id) {
+      const req = getRequests().find(r => r.id === id);
+      if (!req || !['manager', 'admin'].includes(currentRole)) return;
+      if (currentRole === 'manager' && (req.status !== 'pending_manager' || req.requesterId === currentUser.id || req.department !== currentUser.dept)) return;
+      if (currentRole === 'admin' && !['pending', 'pending_finance'].includes(req.status)) return;
+      document.getElementById('action-req-id').value = id;
+      document.getElementById('action-modal-title').textContent = req.status === 'pending_manager' ? 'Manager Review' : 'Finance / Admin Review';
+      document.getElementById('action-req-info').textContent =
+        `${req.title} — by ${req.requester} (${req.department})`;
+      document.getElementById('action-req-details').innerHTML = `
+        <div><strong>Type:</strong> ${escapeHtml(req.type)}</div>
+        <div><strong>Priority:</strong> ${escapeHtml(req.priority)}</div>
+        <div><strong>Details:</strong> ${escapeHtml(req.details)}</div>
+        ${renderRequestTypeDetails(req)}
+        ${req.quantity ? `<div><strong>Qty:</strong> ${escapeHtml(req.quantity)}</div>` : ''}
+        ${req.estimatedCost ? `<div><strong>Est. Cost:</strong> ${escapeHtml(req.estimatedCost)}</div>` : ''}
+        ${req.neededBy ? `<div><strong>Needed by:</strong> ${formatDate(req.neededBy)}</div>` : ''}
+        ${req.attachmentNotes ? `<div><strong>Attachments/Refs:</strong> ${escapeHtml(req.attachmentNotes)}</div>` : ''}
+      `;
+      document.getElementById('action-comment').value = '';
+      document.getElementById('action-modal').classList.add('open');
+    }
+
+    function closeActionModal() {
+      document.getElementById('action-modal').classList.remove('open');
+    }
+
+    function processAction(status) {
+      const id = document.getElementById('action-req-id').value;
+      const comment = document.getElementById('action-comment').value.trim();
+      const list = getRequests();
+      const idx = list.findIndex(r => r.id === id);
+      if (idx === -1) return;
+      const request = list[idx];
+      if (!['manager', 'admin'].includes(currentRole) || (currentRole === 'manager' && (request.status !== 'pending_manager' || request.requesterId === currentUser.id || request.department !== currentUser.dept))) {
+        toast('You are not authorized to review this request.', 'error');
+        return;
+      }
+      if (status === 'needs_revision' && !comment) {
+        toast('Add a comment explaining what needs to be revised.', 'error');
+        return;
+      }
+      if (currentRole === 'admin' && request.status === 'pending_manager') {
+        toast('This request is waiting for Manager review.', 'error');
+        return;
+      }
+      if (status === 'approved' && !['pending', 'pending_manager', 'pending_finance'].includes(request.status)) return;
+      const nextStatus = status === 'approved' && request.status === 'pending_manager'
+        ? 'pending_finance'
+        : status;
+      request.status = nextStatus;
+      list[idx].actionComment = comment;
+      list[idx].actionBy = currentUser.name;
+      list[idx].actionAt = new Date().toISOString();
+      if (!Array.isArray(request.history)) request.history = [];
+      request.history.push({ status: nextStatus, actor: currentUser.name, at: request.actionAt, comment });
+      setRequests(list);
+      addAuditLog(`Request ${statusLabel(nextStatus).toLowerCase()}`, request.title, request.id, request.requesterId);
+      notifyRequestParticipants(request, `Request ${statusLabel(nextStatus).toLowerCase()}`, `${request.title}: ${comment || statusLabel(nextStatus)}`);
+      closeActionModal();
+      const message = nextStatus === 'pending_finance'
+        ? 'Manager approved. Sent for Finance/Admin approval.'
+        : nextStatus === 'needs_revision'
+          ? 'Request returned for revision.'
+          : `Request ${nextStatus}`;
+      toast(message, nextStatus === 'approved' || nextStatus === 'pending_finance' ? 'success' : 'error');
+      renderAdmin();
+      renderDashboard();
+    }
+
+    function reviseRequest() {
+      const request = getRequests().find(item => item.id === viewingReqId);
+      if (!request || request.status !== 'needs_revision' || request.requesterId !== currentUser.id) return;
+      editingRequestId = request.id;
+      document.getElementById('req-type').value = request.type;
+      renderRequestTypeFields(request.typeDetails || {});
+      document.getElementById('req-priority').value = request.priority;
+      document.getElementById('req-title').value = request.title;
+      document.getElementById('req-details').value = request.details;
+      document.getElementById('req-qty').value = request.quantity || '';
+      document.getElementById('req-cost').value = request.estimatedCost || '';
+      document.getElementById('req-date').value = request.neededBy || '';
+      document.getElementById('req-attachment').value = request.attachmentNotes || '';
+      document.getElementById('cancel-revision').classList.remove('hidden');
+      document.querySelector('#request-form button[type="submit"]').textContent = 'Resubmit Request';
+      closeViewReqModal();
+      showSection('new-request');
+    }
+
+    function cancelRequestRevision() {
+      editingRequestId = null;
+      document.getElementById('request-form').reset();
+      document.getElementById('cancel-revision').classList.add('hidden');
+      document.querySelector('#request-form button[type="submit"]').textContent = 'Submit Request';
+    }
+
+    function viewRequest(id) {
+      const req = getRequests().find(r => r.id === id);
+      if (!req) return;
+      viewingReqId = id;
+      document.getElementById('view-req-title').textContent = req.title;
+      document.getElementById('view-req-body').innerHTML = `
+        <p><strong>Status:</strong> <span class="status status-${req.status}">${req.status}</span></p>
+        <p><strong>Type:</strong> ${escapeHtml(req.type)} · <strong>Priority:</strong> ${escapeHtml(req.priority)}</p>
+        <p><strong>Requester:</strong> ${escapeHtml(req.requester)} (${escapeHtml(req.department)})</p>
+        <p><strong>Submitted:</strong> ${formatDateTime(req.createdAt)}</p>
+        <p style="margin-top:0.75rem"><strong>Details:</strong><br>${escapeHtml(req.details)}</p>
+        ${renderRequestTypeDetails(req)}
+        ${req.quantity ? `<p><strong>Quantity:</strong> ${escapeHtml(req.quantity)}</p>` : ''}
+        ${req.estimatedCost ? `<p><strong>Estimated Cost:</strong> ${escapeHtml(req.estimatedCost)}</p>` : ''}
+        ${req.neededBy ? `<p><strong>Needed By:</strong> ${formatDate(req.neededBy)}</p>` : ''}
+        ${req.attachmentNotes ? `<p><strong>Attachment / Reference Notes:</strong><br>${escapeHtml(req.attachmentNotes)}</p>` : ''}
+        ${renderApprovalTimeline(req)}
+        ${req.actionBy ? `<p style="margin-top:0.75rem"><strong>Action by:</strong> ${escapeHtml(req.actionBy)} on ${formatDateTime(req.actionAt)}</p>` : ''}
+        ${req.actionComment ? `<p><strong>Comment:</strong> ${escapeHtml(req.actionComment)}</p>` : ''}
+      `;
+      // Only show print button for approved
+      const printBtn = document.getElementById('btn-print-single');
+      if (req.status === 'approved') {
+        printBtn.classList.remove('hidden');
+      } else {
+        printBtn.classList.add('hidden');
+      }
+      const reviseBtn = document.getElementById('btn-revise-request');
+      reviseBtn.classList.toggle('hidden', req.status !== 'needs_revision' || req.requesterId !== currentUser.id);
+      document.getElementById('view-req-modal').classList.add('open');
+    }
+
+    function renderApprovalTimeline(req) {
+      const history = Array.isArray(req.history) ? req.history : [];
+      if (!history.length) {
+        if (!req.actionAt) return '';
+        history.push({ status: req.status, actor: req.actionBy || 'Approver', at: req.actionAt, comment: req.actionComment || '' });
+      }
+      return `<div class="approval-timeline"><h3>Approval Timeline</h3><ol>${history.map(step => `
+        <li><strong>${escapeHtml(statusLabel(step.status))}</strong> · ${escapeHtml(step.actor)} · ${formatDateTime(step.at)}${step.comment ? `<p>${escapeHtml(step.comment)}</p>` : ''}</li>
+      `).join('')}</ol></div>`;
+    }
+
+    function closeViewReqModal() {
+      document.getElementById('view-req-modal').classList.remove('open');
+      viewingReqId = null;
+    }
+
+    // ========== PRINT ==========
+    function renderPrintList() {
+      const deptFilter = document.getElementById('print-filter-dept').value;
+      let list = getRequests().filter(r => r.status === 'approved');
+      if (deptFilter) list = list.filter(r => r.department === deptFilter);
+      list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+      const el = document.getElementById('print-list');
+      if (list.length === 0) {
+        el.innerHTML = '<div class="empty"><div class="icon">📭</div>No approved requests found.</div>';
+        return;
+      }
+      let html = `<table><thead><tr>
+        <th>Date</th><th>Requester</th><th>Dept</th><th>Type</th><th>Title</th><th></th>
+      </tr></thead><tbody>`;
+      list.forEach(r => {
+        html += `<tr>
+          <td>${formatDate(r.createdAt)}</td>
+          <td>${escapeHtml(r.requester)}</td>
+          <td>${escapeHtml(r.department)}</td>
+          <td>${escapeHtml(r.type)}</td>
+          <td>${escapeHtml(r.title)}</td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="viewRequest('${r.id}')">View</button>
+            <button class="btn btn-primary btn-sm" onclick="printRequest('${r.id}')">🖨️ Print</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    function buildPrintHTML(req) {
+      return `
+        <div class="print-sheet">
+          <div class="print-header">
+            <h1>KAMA COMPANIES – OFFICIAL REQUISITION / APPROVAL FORM</h1>
+            <div style="font-size:0.9rem;color:#64748b">Kama Companies Requisition System</div>
+          </div>
+          <div class="print-meta">
+            <div><strong>Request ID:</strong> ${escapeHtml(req.id)}</div>
+            <div><strong>Status:</strong> <span class="print-status approved">APPROVED</span></div>
+            <div><strong>Submitted:</strong> ${formatDateTime(req.createdAt)}</div>
+            <div><strong>Approved on:</strong> ${formatDateTime(req.actionAt)}</div>
+            <div><strong>Requester:</strong> ${escapeHtml(req.requester)}</div>
+            <div><strong>Department:</strong> ${escapeHtml(req.department)}</div>
+            <div><strong>Type:</strong> ${escapeHtml(req.type)}</div>
+            <div><strong>Priority:</strong> ${escapeHtml(req.priority)}</div>
+            ${req.estimatedCost ? `<div><strong>Est. Cost:</strong> ${escapeHtml(req.estimatedCost)}</div>` : ''}
+            ${req.quantity ? `<div><strong>Quantity:</strong> ${escapeHtml(req.quantity)}</div>` : ''}
+            ${req.neededBy ? `<div><strong>Needed By:</strong> ${formatDate(req.neededBy)}</div>` : ''}
+          </div>
+          <div class="print-section">
+            <h3>Title</h3>
+            <p>${escapeHtml(req.title)}</p>
+          </div>
+          <div class="print-section">
+            <h3>Detailed Description</h3>
+            <p>${escapeHtml(req.details)}</p>
+          </div>
+          ${req.typeDetails ? `<div class="print-section"><h3>Request Details</h3>${renderRequestTypeDetails(req)}</div>` : ''}
+          ${req.attachmentNotes ? `
+          <div class="print-section">
+            <h3>Attachment / Reference Notes</h3>
+            <p>${escapeHtml(req.attachmentNotes)}</p>
+          </div>` : ''}
+          ${req.actionComment ? `
+          <div class="print-section">
+            <h3>Approver Comment</h3>
+            <p>${escapeHtml(req.actionComment)}</p>
+          </div>` : ''}
+          <div class="print-footer">
+            <div>
+              <div class="sign-line">Requester Signature / Date</div>
+            </div>
+            <div>
+              <div class="sign-line">Approver: ${escapeHtml(req.actionBy || '________________')} / Date</div>
+            </div>
+          </div>
+          <p style="margin-top:30px;font-size:0.8rem;color:#94a3b8;text-align:center">
+            Generated on ${new Date().toLocaleString()} · Keep this document for records
+          </p>
+        </div>
+      `;
+    }
+
+    function printRequest(id) {
+      const req = getRequests().find(r => r.id === id);
+      if (!req || req.status !== 'approved') {
+        toast('Only approved requests can be printed', 'error');
+        return;
+      }
+      const area = document.getElementById('print-area');
+      area.innerHTML = buildPrintHTML(req);
+      area.classList.remove('hidden');
+      // Small delay so content is rendered
+      setTimeout(() => {
+        window.print();
+        // Hide again after print dialog
+        setTimeout(() => area.classList.add('hidden'), 500);
+      }, 100);
+    }
+
+    function printSingleRequest() {
+      if (viewingReqId) printRequest(viewingReqId);
+    }
+
+    // ========== CALENDAR ==========
+    function setCalendarView(view) {
+      calendarView = view;
+      document.querySelectorAll('[data-calendar-view]').forEach(button => {
+        button.classList.toggle('active', button.dataset.calendarView === view);
+      });
+      renderCalendar();
+    }
+
+    function changeCalendarPeriod(delta) {
+      if (calendarView === 'month') calFocus = new Date(calFocus.getFullYear(), calFocus.getMonth() + delta, 1);
+      else calFocus.setDate(calFocus.getDate() + delta * (calendarView === 'week' ? 7 : 1));
+      renderCalendar();
+    }
+
+    function getCalendarRange() {
+      const focus = new Date(calFocus.getFullYear(), calFocus.getMonth(), calFocus.getDate());
+      if (calendarView === 'month') return [new Date(focus.getFullYear(), focus.getMonth(), 1), new Date(focus.getFullYear(), focus.getMonth() + 1, 1)];
+      if (calendarView === 'day') return [focus, new Date(focus.getFullYear(), focus.getMonth(), focus.getDate() + 1)];
+      const start = new Date(focus);
+      start.setDate(start.getDate() - start.getDay());
+      return [start, new Date(start.getFullYear(), start.getMonth(), start.getDate() + 7)];
+    }
+
+    function getFilteredCalendarEvents() {
+      const department = document.getElementById('calendar-filter-dept').value;
+      const type = document.getElementById('calendar-filter-type').value;
+      return getEvents().filter(event => (!department || event.department === department) && (!type || event.type === type));
+    }
+
+    function renderCalendar() {
+      calYear = calFocus.getFullYear();
+      calMonth = calFocus.getMonth();
+      const label = document.getElementById('cal-month-label');
+      const months = ['January','February','March','April','May','June',
+                      'July','August','September','October','November','December'];
+      if (calendarView === 'month') label.textContent = `${months[calMonth]} ${calYear}`;
+      else if (calendarView === 'day') label.textContent = formatDate(localDateString(calFocus));
+      else {
+        const [start, end] = getCalendarRange();
+        const last = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1);
+        label.textContent = `${formatDate(localDateString(start))} – ${formatDate(localDateString(last))}`;
+      }
+
+      const grid = document.getElementById('calendar-grid');
+      grid.classList.toggle('hidden', calendarView !== 'month');
+      if (calendarView !== 'month') {
+        renderCalendarPeriod();
+        renderMonthEventsList();
+        return;
+      }
+      grid.className = 'calendar-grid';
+      grid.innerHTML = '';
+
+      ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'cal-day-name';
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      const first = new Date(calYear, calMonth, 1);
+      const startDay = first.getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const prevDays = new Date(calYear, calMonth, 0).getDate();
+      const events = getFilteredCalendarEvents();
+      const today = new Date();
+      const isToday = (y, m, d) =>
+        y === today.getFullYear() && m === today.getMonth() && d === today.getDate();
+
+      for (let i = startDay - 1; i >= 0; i--) {
+        const day = prevDays - i;
+        const el = document.createElement('div');
+        el.className = 'cal-day other-month';
+        el.innerHTML = `<div class="day-num">${day}</div>`;
+        grid.appendChild(el);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day' + (isToday(calYear, calMonth, d) ? ' today' : '');
+        el.onclick = () => openEventModalForDay(d);
+        let html = `<div class="day-num">${d}</div>`;
+        const dayStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayEvents = events.filter(e => e.date === dayStr);
+        dayEvents.slice(0, 3).forEach(ev => {
+          const cls = ev.type === 'leave' ? 'leave' : 'activity';
+          html += `<div class="cal-event ${cls}" onclick="event.stopPropagation(); viewEvent('${ev.id}')">${escapeHtml(ev.title)}</div>`;
+        });
+        if (dayEvents.length > 3) {
+          html += `<div class="cal-event">+${dayEvents.length - 3} more</div>`;
+        }
+        el.innerHTML = html;
+        grid.appendChild(el);
+      }
+
+      const totalCells = startDay + daysInMonth;
+      const remaining = (7 - (totalCells % 7)) % 7;
+      for (let i = 1; i <= remaining; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day other-month';
+        el.innerHTML = `<div class="day-num">${i}</div>`;
+        grid.appendChild(el);
+      }
+
+      renderMonthEventsList();
+    }
+
+    function renderCalendarPeriod() {
+      const grid = document.getElementById('calendar-grid');
+      const [start, end] = getCalendarRange();
+      const events = getFilteredCalendarEvents();
+      const days = [];
+      for (const date = new Date(start); date < end; date.setDate(date.getDate() + 1)) days.push(new Date(date));
+      grid.className = `calendar-period ${calendarView}`;
+      grid.innerHTML = days.map(date => {
+        const dateString = localDateString(date);
+        const dayEvents = events.filter(event => event.date === dateString);
+        const items = dayEvents.map(event => `<button class="cal-event ${escapeHtml(event.type)}" onclick="viewEvent('${event.id}')">${escapeHtml(event.title)} · ${escapeHtml(event.department || 'General')}</button>`).join('');
+        return `<div class="calendar-period-day"><h3>${formatDate(dateString)}</h3>${items || '<p class="text-muted">No activities</p>'}<button class="calendar-add" onclick="openEventModalForDate('${dateString}')">+ Add</button></div>`;
+      }).join('');
+    }
+
+    function renderMonthEventsList() {
+      const [start, end] = getCalendarRange();
+      const events = getFilteredCalendarEvents()
+        .filter(event => {
+          const date = new Date(`${event.date}T00:00:00`);
+          return date >= start && date < end;
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      document.getElementById('calendar-event-list-title').textContent = calendarView === 'month'
+        ? '📋 All Activities this Month'
+        : calendarView === 'week' ? '📋 Activities this Week' : '📋 Activities this Day';
+      const container = document.getElementById('month-events-list');
+      if (events.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="icon">📭</div>No activities this month yet.</div>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Date</th><th>Title</th><th>Department</th><th>Type</th><th>Added by</th><th></th></tr></thead><tbody>';
+      events.forEach(e => {
+        html += `<tr>
+          <td>${formatDate(e.date)}</td>
+          <td>${escapeHtml(e.title)}</td>
+          <td>${escapeHtml(e.department || 'General')}</td>
+          <td>${e.type}</td>
+          <td>${escapeHtml(e.createdBy)}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="viewEvent('${e.id}')">View</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function openEventModal() {
+      document.getElementById('event-modal-title').textContent = 'Add Activity';
+      document.getElementById('event-form').reset();
+      document.getElementById('event-id').value = '';
+      const today = new Date();
+      document.getElementById('event-date').value =
+        `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      document.getElementById('event-modal').classList.add('open');
+    }
+
+    function openEventModalForDay(day) {
+      openEventModalForDate(`${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    }
+
+    function openEventModalForDate(date) {
+      document.getElementById('event-modal-title').textContent = 'Add Activity';
+      document.getElementById('event-form').reset();
+      document.getElementById('event-id').value = '';
+      document.getElementById('event-date').value = date;
+      document.getElementById('event-modal').classList.add('open');
+    }
+
+    function closeEventModal() {
+      document.getElementById('event-modal').classList.remove('open');
+    }
+
+    function saveEvent(e) {
+      e.preventDefault();
+      const id = document.getElementById('event-id').value;
+      const title = document.getElementById('event-title').value.trim();
+      const date = document.getElementById('event-date').value;
+      const type = document.getElementById('event-type').value;
+      const desc = document.getElementById('event-desc').value.trim();
+
+      let list = getEvents();
+      if (id) {
+        const idx = list.findIndex(x => x.id === id);
+        if (idx !== -1) {
+          list[idx] = { ...list[idx], title, date, type, description: desc };
+        }
+      } else {
+        list.push({
+          id: uid(),
+          title,
+          date,
+          type,
+          description: desc,
+          department: currentUser.dept,
+          createdBy: currentUser.name,
+          createdAt: new Date().toISOString()
+        });
+      }
+      setEvents(list);
+      addAuditLog(id ? 'Activity updated' : 'Activity created', title, id || list[list.length - 1].id, currentUser.id);
+      closeEventModal();
+      toast('Activity saved', 'success');
+      renderCalendar();
+    }
+
+    function viewEvent(id) {
+      const ev = getEvents().find(e => e.id === id);
+      if (!ev) return;
+      viewingEventId = id;
+      document.getElementById('view-event-title').textContent = ev.title;
+      document.getElementById('view-event-meta').textContent =
+        `${formatDate(ev.date)} · ${ev.type} · by ${ev.createdBy}`;
+      document.getElementById('view-event-desc').textContent = ev.description || 'No description.';
+      document.getElementById('view-event-modal').classList.add('open');
+    }
+
+    function closeViewEventModal() {
+      document.getElementById('view-event-modal').classList.remove('open');
+      viewingEventId = null;
+    }
+
+    function deleteEvent() {
+      if (!viewingEventId) return;
+      if (!confirm('Delete this activity?')) return;
+      let list = getEvents().filter(e => e.id !== viewingEventId);
+      setEvents(list);
+      addAuditLog('Activity deleted', viewingEventId, viewingEventId, currentUser.id);
+      closeViewEventModal();
+      toast('Activity deleted', 'success');
+      renderCalendar();
+    }
+
+    function exportCalendarICS() {
+      const [start, end] = getCalendarRange();
+      const events = getFilteredCalendarEvents().filter(event => {
+        const date = new Date(`${event.date}T00:00:00`);
+        return date >= start && date < end;
+      });
+      if (!events.length) {
+        toast('No activities in this view to export.', 'error');
+        return;
+      }
+      const escapeICS = value => String(value || '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+      const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Kama Companies//Requisition Calendar//EN', 'CALSCALE:GREGORIAN'];
+      events.forEach(event => {
+        lines.push('BEGIN:VEVENT', `UID:${escapeICS(event.id)}@kama-companies`, `DTSTAMP:${new Date(event.createdAt || Date.now()).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`, `DTSTART;VALUE=DATE:${event.date.replace(/-/g, '')}`, `SUMMARY:${escapeICS(event.title)}`, `DESCRIPTION:${escapeICS(event.description)}`, `CATEGORIES:${escapeICS(event.type)}`, `END:VEVENT`);
+      });
+      lines.push('END:VCALENDAR');
+      const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'kama-calendar.ics';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ========== RENDER HELPERS ==========
+    function renderDashboard() {
+      const all = getRequests();
+      const mine = all.filter(r => r.requesterId ? r.requesterId === currentUser.id : r.requester === currentUser.name);
+      const pending = all.filter(isPendingRequest);
+      const approved = all.filter(r => r.status === 'approved');
+      const rejected = all.filter(r => r.status === 'rejected');
+
+      const stats = document.getElementById('stats-row');
+      if (currentRole === 'admin') {
+        stats.innerHTML = `
+          <div class="stat-card"><div class="num">${pending.length}</div><div class="label">Pending Approval</div></div>
+          <div class="stat-card"><div class="num">${approved.length}</div><div class="label">Approved</div></div>
+          <div class="stat-card"><div class="num">${rejected.length}</div><div class="label">Rejected</div></div>
+          <div class="stat-card"><div class="num">${all.length}</div><div class="label">Total Requests</div></div>
+        `;
+      } else {
+        stats.innerHTML = `
+          <div class="stat-card"><div class="num">${mine.filter(r => r.status === 'pending').length}</div><div class="label">My Pending</div></div>
+          <div class="stat-card"><div class="num">${mine.filter(r => r.status === 'approved').length}</div><div class="label">My Approved</div></div>
+          <div class="stat-card"><div class="num">${mine.filter(r => r.status === 'rejected').length}</div><div class="label">My Rejected</div></div>
+          <div class="stat-card"><div class="num">${mine.length}</div><div class="label">My Total</div></div>
+        `;
+      }
+
+      const recent = (currentRole === 'admin' ? all : mine).slice(0, 8);
+      const recentEl = document.getElementById('recent-requests');
+      if (recent.length === 0) {
+        recentEl.innerHTML = '<div class="empty"><div class="icon">📭</div>No requests yet.</div>';
+      } else {
+        recentEl.innerHTML = renderRequestTable(recent, currentRole === 'admin');
+      }
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const in14 = new Date(today);
+      in14.setDate(in14.getDate() + 14);
+      const upcoming = getEvents()
+        .filter(e => {
+          const d = new Date(e.date);
+          return d >= today && d <= in14;
+        })
+        .sort((a,b) => a.date.localeCompare(b.date))
+        .slice(0, 6);
+
+      const upEl = document.getElementById('upcoming-activities');
+      if (upcoming.length === 0) {
+        upEl.innerHTML = '<div class="empty"><div class="icon">📅</div>No upcoming activities in the next 2 weeks.</div>';
+      } else {
+        let html = '<table><thead><tr><th>Date</th><th>Activity</th><th>Type</th><th>By</th></tr></thead><tbody>';
+        upcoming.forEach(e => {
+          html += `<tr>
+            <td>${formatDate(e.date)}</td>
+            <td>${escapeHtml(e.title)}</td>
+            <td>${e.type}</td>
+            <td>${escapeHtml(e.createdBy)}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        upEl.innerHTML = html;
+      }
+      renderAnalytics();
+      renderBudgetHint();
+    }
+
+    function renderMyRequests() {
+      const statusF = document.getElementById('my-filter-status').value;
+      const typeF = document.getElementById('my-filter-type').value;
+      let mine = getRequests().filter(r => r.requesterId ? r.requesterId === currentUser.id : r.requester === currentUser.name);
+      if (statusF) mine = mine.filter(r => r.status === statusF);
+      if (typeF) mine = mine.filter(r => r.type === typeF);
+
+      const el = document.getElementById('my-requests-list');
+      if (mine.length === 0) {
+        el.innerHTML = '<div class="empty"><div class="icon">📭</div>No matching requests.</div>';
+      } else {
+        el.innerHTML = renderRequestTable(mine, false);
+      }
+    }
+
+    function renderAdmin() {
+      const allRequests = getRequests();
+      const all = currentRole === 'manager'
+        ? allRequests.filter(r => r.department === currentUser.dept)
+        : allRequests;
+      const pending = all.filter(r => currentRole === 'manager'
+        ? r.status === 'pending_manager' && r.requesterId !== currentUser.id
+        : ['pending', 'pending_finance'].includes(r.status));
+      const pendingEl = document.getElementById('admin-pending');
+      if (pending.length === 0) {
+        pendingEl.innerHTML = '<div class="empty"><div class="icon">✅</div>No pending requests. All clear!</div>';
+      } else {
+        pendingEl.innerHTML = renderRequestTable(pending, true, true);
+      }
+
+      const deptF = document.getElementById('admin-filter-dept').value;
+      const statusF = document.getElementById('admin-filter-status').value;
+      const typeF = document.getElementById('admin-filter-type').value;
+      let filtered = [...all];
+      if (deptF) filtered = filtered.filter(r => r.department === deptF);
+      if (statusF) filtered = filtered.filter(r => r.status === statusF);
+      if (typeF) filtered = filtered.filter(r => r.type === typeF);
+
+      const allEl = document.getElementById('admin-all');
+      if (filtered.length === 0) {
+        allEl.innerHTML = '<div class="empty"><div class="icon">📭</div>No matching requests.</div>';
+      } else {
+        allEl.innerHTML = renderRequestTable(filtered, true, false);
+      }
+    }
+
+    function renderRequestTable(list, showRequester, showActions = false) {
+      let html = `<table><thead><tr>
+        <th>Date</th>
+        ${showRequester ? '<th>Requester</th>' : ''}
+        <th>Type</th>
+        <th>Title</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th></th>
+        ${showActions ? '<th>Action</th>' : ''}
+      </tr></thead><tbody>`;
+
+      list.forEach(r => {
+        html += `<tr>
+          <td>${formatDateTime(r.createdAt)}</td>
+          ${showRequester ? `<td>${escapeHtml(r.requester)}<br><span class="text-muted">${escapeHtml(r.department)}</span></td>` : ''}
+          <td>${escapeHtml(r.type)}</td>
+          <td>
+            <strong>${escapeHtml(r.title)}</strong>
+            ${r.quantity ? `<br><span class="text-muted">Qty: ${escapeHtml(r.quantity)}</span>` : ''}
+            ${r.estimatedCost ? `<br><span class="text-muted">Cost: ${escapeHtml(r.estimatedCost)}</span>` : ''}
+            ${r.actionComment ? `<br><span class="text-muted">Note: ${escapeHtml(r.actionComment)}</span>` : ''}
+          </td>
+          <td>${r.priority}</td>
+          <td><span class="status status-${r.status}">${escapeHtml(statusLabel(r.status))}</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="viewRequest('${r.id}')">View</button></td>
+          ${showActions ? `<td>
+            <button class="btn btn-success btn-sm" onclick="openActionModal('${r.id}')">Review</button>
+          </td>` : ''}
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function refreshAll() {
+      renderDashboard();
+      renderMyRequests();
+      renderCalendar();
+      if (currentRole === 'admin' || currentRole === 'manager') {
+        renderAdmin();
+      }
+      if (currentRole === 'admin') {
+        renderPrintList();
+      }
+      updateNotificationBadge();
+    }
+
+    // ========== UTILS ==========
+    function localDateString(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function parseCost(value) {
+      const amount = Number(String(value || '').replace(/[^\d.-]/g, ''));
+      return Number.isFinite(amount) ? amount : 0;
+    }
+
+    function formatMoney(value) {
+      const currency = currentUser ? getUserPreferences().currency || 'USD' : 'USD';
+      try {
+        return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 2 }).format(value || 0);
+      } catch {
+        return `${currency} ${Number(value || 0).toFixed(2)}`;
+      }
+    }
+
+    function readAttachmentFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, type: file.type || 'application/octet-stream', size: file.size, data: reader.result });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderSettings() {
+      if (!currentUser) return;
+      const profileName = document.getElementById('profile-name');
+      if (!profileName.value || profileName.dataset.userId !== currentUser.id) {
+        profileName.value = currentUser.name;
+        profileName.dataset.userId = currentUser.id;
+        document.getElementById('profile-dept').value = currentUser.dept;
+      }
+      const preferences = getUserPreferences();
+      document.getElementById('profile-theme').value = preferences.theme || 'light';
+      document.getElementById('profile-currency').value = preferences.currency || 'USD';
+      document.getElementById('profile-notifications').checked = Boolean(preferences.browserNotifications);
+      const canEdit = currentRole === 'admin';
+      const budgets = getBudgets();
+      document.getElementById('budget-settings').innerHTML = Object.entries(DEPT_CATEGORY_MAP).map(([department]) => `
+        <div><label for="budget-${escapeHtml(department.replace(/\s/g, '-'))}">${escapeHtml(department)} budget (${escapeHtml(preferences.currency || 'USD')})</label>
+        <input type="number" min="0" step="0.01" id="budget-${escapeHtml(department.replace(/\s/g, '-'))}" value="${Number(budgets[department]) || 0}" ${canEdit ? '' : 'disabled'} /></div>
+      `).join('');
+      document.getElementById('save-budgets-button').classList.toggle('hidden', !canEdit);
+      document.getElementById('req-cost').placeholder = `Enter amount in ${preferences.currency || 'USD'}`;
+      renderBudgetHint();
+    }
+
+    function applyTheme(theme) {
+      document.body.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+    }
+
+    async function savePreferences() {
+      if (!currentUser) return;
+      const preferences = {
+        ...getUserPreferences(),
+        theme: document.getElementById('profile-theme').value,
+        currency: document.getElementById('profile-currency').value,
+        browserNotifications: document.getElementById('profile-notifications').checked
+      };
+      save(`req_preferences_${currentUser.id}`, preferences);
+      applyTheme(preferences.theme);
+      if (preferences.browserNotifications && 'Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      renderSettings();
+      if (document.getElementById('section-dashboard').classList.contains('active')) renderDashboard();
+    }
+
+    function saveProfile(event) {
+      event.preventDefault();
+      const accounts = getAccounts();
+      const account = accounts.find(item => item.id === currentUser.id);
+      if (!account) return;
+      account.name = document.getElementById('profile-name').value.trim();
+      account.dept = document.getElementById('profile-dept').value;
+      if (!account.name) {
+        toast('Enter a full name.', 'error');
+        return;
+      }
+      save('req_accounts', accounts);
+      currentUser.name = account.name;
+      currentUser.dept = account.dept;
+      document.getElementById('display-name').textContent = `${account.name} · ${account.dept}`;
+      populateCategoryDropdown();
+      renderSettings();
+      refreshAll();
+      toast('Profile updated.', 'success');
+    }
+
+    async function changePassword(event) {
+      event.preventDefault();
+      const form = document.getElementById('password-form');
+      if (!form.reportValidity()) return;
+      const accounts = getAccounts();
+      const account = accounts.find(item => item.id === currentUser.id);
+      const oldPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      if (!account || await derivePasswordHash(oldPassword, account.passwordSalt) !== account.passwordHash) {
+        toast('Current password is incorrect.', 'error');
+        return;
+      }
+      if (!/^\d{3}$/.test(newPassword)) {
+        toast('New password must be exactly three digits.', 'error');
+        return;
+      }
+      if (newPassword !== document.getElementById('confirm-new-password').value) {
+        toast('New passwords do not match.', 'error');
+        return;
+      }
+      account.passwordSalt = createPasswordSalt();
+      account.passwordHash = await derivePasswordHash(newPassword, account.passwordSalt);
+      save('req_accounts', accounts);
+      form.reset();
+      toast('Password updated.', 'success');
+    }
+
+    function saveBudgets(event) {
+      event.preventDefault();
+      if (currentRole !== 'admin') {
+        toast('Only Admin can edit department budgets.', 'error');
+        return;
+      }
+      const budgets = {};
+      Object.keys(DEPT_CATEGORY_MAP).forEach(department => {
+        const id = `budget-${department.replace(/\s/g, '-')}`;
+        budgets[department] = Math.max(0, Number(document.getElementById(id).value) || 0);
+      });
+      save('req_budgets', budgets);
+      renderSettings();
+      renderDashboard();
+      toast('Department budgets saved.', 'success');
+    }
+
+    function renderBudgetHint() {
+      const hint = document.getElementById('budget-indicator');
+      if (!hint || !currentUser) return;
+      const requests = getRequests().filter(request => request.department === currentUser.dept && request.status === 'approved');
+      const used = requests.reduce((total, request) => total + parseCost(request.estimatedCost), 0);
+      const budget = Number(getBudgets()[currentUser.dept]) || 0;
+      const requested = parseCost(document.getElementById('req-cost').value);
+      hint.textContent = budget > 0
+        ? `Approved spend: ${formatMoney(used)} of ${formatMoney(budget)}. After this request: ${formatMoney(used + requested)}.`
+        : 'No budget set for this department yet.';
+    }
+
+    function renderAnalytics() {
+      const requests = getRequests();
+      const scoped = currentRole === 'admin' ? requests : requests.filter(request => request.requesterId === currentUser.id || (!request.requesterId && request.requester === currentUser.name));
+      const approved = scoped.filter(request => request.status === 'approved');
+      const currentMonth = localDateString().slice(0, 7);
+      const monthSpend = approved.filter(request => (request.actionAt || request.createdAt || '').slice(0, 7) === currentMonth).reduce((total, request) => total + parseCost(request.estimatedCost), 0);
+      const totalSpend = approved.reduce((total, request) => total + parseCost(request.estimatedCost), 0);
+      const byCategory = {};
+      approved.forEach(request => { byCategory[request.type] = (byCategory[request.type] || 0) + parseCost(request.estimatedCost); });
+      const top = Object.entries(byCategory).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      const budgets = getBudgets();
+      const departments = currentRole === 'admin' ? Object.keys(DEPT_CATEGORY_MAP) : [currentUser.dept];
+      const budgetViews = departments.map(department => {
+        const spent = requests.filter(request => request.department === department && request.status === 'approved').reduce((total, request) => total + parseCost(request.estimatedCost), 0);
+        const budget = Number(budgets[department]) || 0;
+        if (!budget) return `<div class="analytics-item"><strong>${escapeHtml(department)}</strong><p class="text-muted">No budget set</p></div>`;
+        const percent = Math.min(100, Math.round(spent / budget * 100));
+        return `<div class="analytics-item"><strong>${escapeHtml(department)} · ${percent}% used</strong><p class="text-muted">${formatMoney(spent)} of ${formatMoney(budget)}</p><div class="budget-track"><span style="width:${percent}%"></span></div></div>`;
+      }).join('');
+      document.getElementById('analytics-summary').innerHTML = `
+        <div class="analytics-item"><span class="text-muted">Approved spend this month</span><strong>${formatMoney(monthSpend)}</strong></div>
+        <div class="analytics-item"><span class="text-muted">Total approved spend</span><strong>${formatMoney(totalSpend)}</strong></div>
+        <div class="analytics-item"><span class="text-muted">Top categories</span><strong>${top.length ? top.map(([category, amount]) => `${escapeHtml(category)} · ${formatMoney(amount)}`).join('<br>') : 'No approved spend yet'}</strong></div>
+        ${budgetViews}
+      `;
+    }
+
+    function addAuditLog(action, description, entityId, relatedUserId) {
+      const entries = getAuditLog();
+      entries.unshift({ id: uid(), action, description, entityId, relatedUserId, actorId: currentUser && currentUser.id, actor: currentUser ? currentUser.name : 'System', at: new Date().toISOString() });
+      save('req_audit_log', entries.slice(0, 500));
+    }
+
+    function notifyUser(userId, title, message, requestId) {
+      const notifications = getNotifications();
+      notifications.unshift({ id: uid(), userId, title, message, requestId, createdAt: new Date().toISOString(), read: false });
+      save('req_notifications', notifications.slice(0, 200));
+      if (currentUser && currentUser.id === userId) updateNotificationBadge();
+      if (currentUser && currentUser.id === userId && getUserPreferences().browserNotifications && 'Notification' in window && Notification.permission === 'granted' && document.visibilityState === 'hidden') {
+        new Notification(title, { body: message });
+      }
+    }
+
+    function notifyRequestParticipants(request, title, message) {
+      const accounts = getAccounts();
+      if (request.requesterId && request.requesterId !== currentUser.id) {
+        notifyUser(request.requesterId, title, message, request.id);
+      }
+      if (request.status === 'pending_manager') {
+        accounts.filter(account => account.role === 'manager' && account.dept === request.department && account.id !== currentUser.id).forEach(account => notifyUser(account.id, title, message, request.id));
+      } else if (request.status === 'pending_finance') {
+        accounts.filter(account => account.role === 'admin' && account.id !== currentUser.id).forEach(account => notifyUser(account.id, title, message, request.id));
+      }
+    }
+
+    function updateNotificationBadge() {
+      if (!currentUser) return;
+      const unread = getNotifications().filter(item => item.userId === currentUser.id && !item.read).length;
+      const count = document.getElementById('notification-count');
+      count.textContent = unread ? String(unread) : '';
+      count.classList.toggle('hidden', unread === 0);
+    }
+
+    function renderNotifications() {
+      if (!currentUser) return;
+      const notifications = getNotifications().filter(item => item.userId === currentUser.id);
+      updateNotificationBadge();
+      const container = document.getElementById('notification-list');
+      if (!notifications.length) {
+        container.innerHTML = '<div class="empty">No notifications yet.</div>';
+        return;
+      }
+      container.innerHTML = `<table><thead><tr><th>When</th><th>Update</th><th>Status</th><th></th></tr></thead><tbody>${notifications.map(item => `
+        <tr><td>${formatDateTime(item.createdAt)}</td><td><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.message)}</td><td>${item.read ? 'Read' : 'New'}</td><td>${item.requestId ? `<button class="btn btn-outline btn-sm" onclick="openNotificationRequest('${item.id}')">View</button>` : ''}</td></tr>
+      `).join('')}</tbody></table>`;
+    }
+
+    function markAllNotificationsRead() {
+      const notifications = getNotifications().map(item => item.userId === currentUser.id ? { ...item, read: true } : item);
+      save('req_notifications', notifications);
+      renderNotifications();
+    }
+
+    function openNotificationRequest(notificationId) {
+      const notifications = getNotifications();
+      const notification = notifications.find(item => item.id === notificationId && item.userId === currentUser.id);
+      if (!notification) return;
+      notification.read = true;
+      save('req_notifications', notifications);
+      const request = getRequests().find(item => item.id === notification.requestId);
+      renderNotifications();
+      if (request) viewRequest(request.id);
+    }
+
+    function renderAuditLog() {
+      const entries = getAuditLog().filter(entry => currentRole === 'admin' || entry.actorId === currentUser.id || entry.relatedUserId === currentUser.id);
+      const container = document.getElementById('audit-log-list');
+      if (!entries.length) {
+        container.innerHTML = '<div class="empty">No activity recorded yet.</div>';
+        return;
+      }
+      container.innerHTML = `<table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>${entries.map(entry => `
+        <tr><td>${formatDateTime(entry.at)}</td><td>${escapeHtml(entry.actor)}</td><td>${escapeHtml(entry.action)}</td><td>${escapeHtml(entry.description)}</td></tr>
+      `).join('')}</tbody></table>`;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    function statusLabel(status) {
+      const labels = {
+        pending: 'Pending',
+        pending_manager: 'Pending Manager',
+        pending_finance: 'Pending Finance',
+        needs_revision: 'Needs Revision',
+        approved: 'Approved',
+        rejected: 'Rejected'
+      };
+      return labels[status] || status;
+    }
+
+    function isPendingRequest(request) {
+      return ['pending', 'pending_manager', 'pending_finance'].includes(request.status);
+    }
+    function formatDateTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
+        ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function toast(msg, type = '') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'show ' + type;
+      setTimeout(() => { el.className = ''; }, 3000);
+    }
+
+    // Close modals on overlay click
+    ['event-modal', 'action-modal', 'view-event-modal', 'view-req-modal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', e => {
+        if (e.target === e.currentTarget) {
+          if (id === 'event-modal') closeEventModal();
+          if (id === 'action-modal') closeActionModal();
+          if (id === 'view-event-modal') closeViewEventModal();
+          if (id === 'view-req-modal') closeViewReqModal();
+        }
+      });
+    });
+
+    window.addEventListener('storage', event => {
+      if (!currentUser || !['req_requests', 'req_events', 'req_notifications', 'req_audit_log', 'req_budgets'].includes(event.key)) return;
+      refreshAll();
+      if (document.getElementById('section-notifications').classList.contains('active')) renderNotifications();
+      if (document.getElementById('section-activity').classList.contains('active')) renderAuditLog();
+    });
+  </script>
+</body>
+</html>
