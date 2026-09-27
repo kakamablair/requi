@@ -981,7 +981,231 @@
 
   <div id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    // ========== SUPABASE CONFIGURATION & SYNC ==========
+    const SUPABASE_URL = window.SUPABASE_URL || 'YOUR_SUPABASE_URL_HERE';
+    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY_HERE';
+    let supabaseClient = null;
+
+    if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL_HERE') {
+      try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (e) {
+        console.error('Supabase initialization error:', e);
+      }
+    }
+
+    async function syncAccountToSupabase(account) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('accounts').upsert({
+          id: account.id,
+          username: account.username,
+          name: account.name,
+          dept: account.dept,
+          role: account.role,
+          password_salt: account.passwordSalt,
+          password_hash: account.passwordHash
+        });
+      } catch (e) { console.error('Supabase account sync error:', e); }
+    }
+
+    async function syncRequestToSupabase(req) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('requests').upsert({
+          id: req.id,
+          type: req.type,
+          priority: req.priority || 'Normal',
+          title: req.title,
+          details: req.details || '',
+          quantity: req.quantity || '',
+          estimated_cost: req.estimatedCost || '',
+          type_details: req.typeDetails || {},
+          needed_by: req.neededBy || null,
+          attachment_notes: req.attachmentNotes || '',
+          attachments: req.attachments || [],
+          requester: req.requester,
+          requester_id: req.requesterId || null,
+          department: req.department,
+          status: req.status,
+          action_comment: req.actionComment || '',
+          action_by: req.actionBy || '',
+          action_at: req.actionAt || null,
+          history: req.history || []
+        });
+      } catch (e) { console.error('Supabase request sync error:', e); }
+    }
+
+    async function syncEventToSupabase(evt) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('events').upsert({
+          id: evt.id,
+          title: evt.title,
+          date: evt.date,
+          type: evt.type,
+          description: evt.description || '',
+          created_by: evt.createdBy
+        });
+      } catch (e) { console.error('Supabase event sync error:', e); }
+    }
+
+    async function deleteEventFromSupabase(id) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('events').delete().eq('id', id);
+      } catch (e) { console.error('Supabase delete event error:', e); }
+    }
+
+    async function syncBudgetsToSupabase(budgets) {
+      if (!supabaseClient) return;
+      try {
+        const rows = Object.entries(budgets).map(([department, allocated_amount]) => ({
+          department,
+          allocated_amount
+        }));
+        await supabaseClient.from('budgets').upsert(rows);
+      } catch (e) { console.error('Supabase budget sync error:', e); }
+    }
+
+    async function syncAuditLogToSupabase(log) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('audit_logs').upsert({
+          id: log.id,
+          action: log.action,
+          description: log.description || '',
+          entity_id: log.entityId || null,
+          related_user_id: log.relatedUserId || null,
+          actor_name: log.actor || 'System',
+          created_at: log.at || new Date().toISOString()
+        });
+      } catch (e) { console.error('Supabase audit log sync error:', e); }
+    }
+
+    async function syncNotificationToSupabase(notif) {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('notifications').upsert({
+          id: notif.id,
+          user_id: notif.userId,
+          title: notif.title,
+          message: notif.message,
+          request_id: notif.requestId || null,
+          read: notif.read || false,
+          created_at: notif.createdAt || new Date().toISOString()
+        });
+      } catch (e) { console.error('Supabase notification sync error:', e); }
+    }
+
+    async function syncAllFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const [accRes, reqRes, evtRes, bdgRes, notifRes, audRes] = await Promise.all([
+          supabaseClient.from('accounts').select('*'),
+          supabaseClient.from('requests').select('*'),
+          supabaseClient.from('events').select('*'),
+          supabaseClient.from('budgets').select('*'),
+          supabaseClient.from('notifications').select('*'),
+          supabaseClient.from('audit_logs').select('*')
+        ]);
+
+        if (accRes.data && accRes.data.length > 0) {
+          const accounts = accRes.data.map(a => ({
+            id: a.id,
+            username: a.username,
+            name: a.name,
+            dept: a.dept,
+            role: a.role,
+            passwordSalt: a.password_salt,
+            passwordHash: a.password_hash
+          }));
+          save('req_accounts', accounts);
+        }
+
+        if (reqRes.data) {
+          const requests = reqRes.data.map(r => ({
+            id: r.id,
+            type: r.type,
+            priority: r.priority,
+            title: r.title,
+            details: r.details,
+            quantity: r.quantity,
+            estimatedCost: r.estimated_cost,
+            typeDetails: r.type_details,
+            neededBy: r.needed_by,
+            attachmentNotes: r.attachment_notes,
+            attachments: r.attachments,
+            requester: r.requester,
+            requesterId: r.requester_id,
+            department: r.department,
+            status: r.status,
+            actionComment: r.action_comment,
+            actionBy: r.action_by,
+            actionAt: r.action_at,
+            history: r.history,
+            createdAt: r.created_at
+          }));
+          save('req_requests', requests);
+        }
+
+        if (evtRes.data) {
+          const events = evtRes.data.map(e => ({
+            id: e.id,
+            title: e.title,
+            date: e.date,
+            type: e.type,
+            description: e.description,
+            createdBy: e.created_by,
+            createdAt: e.created_at
+          }));
+          save('req_events', events);
+        }
+
+        if (bdgRes.data && bdgRes.data.length > 0) {
+          const budgets = {};
+          bdgRes.data.forEach(b => { budgets[b.department] = Number(b.allocated_amount); });
+          save('req_budgets', budgets);
+        }
+
+        if (notifRes.data) {
+          const notifications = notifRes.data.map(n => ({
+            id: n.id,
+            userId: n.user_id,
+            title: n.title,
+            message: n.message,
+            requestId: n.request_id,
+            read: n.read,
+            createdAt: n.created_at
+          }));
+          save('req_notifications', notifications);
+        }
+
+        if (audRes.data) {
+          const logs = audRes.data.map(l => ({
+            id: l.id,
+            action: l.action,
+            description: l.description,
+            entityId: l.entity_id,
+            relatedUserId: l.related_user_id,
+            actorName: l.actor_name,
+            at: l.created_at
+          }));
+          save('req_audit_log', logs);
+        }
+
+        if (currentUser) {
+          refreshAll();
+        }
+      } catch (err) {
+        console.error('Failed to sync from Supabase:', err);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', syncAllFromSupabase);
+
     // ========== STATE ==========
     let currentUser = null;
     let currentRole = null;
@@ -1114,9 +1338,15 @@
       localStorage.setItem(key, JSON.stringify(data));
     }
     function getRequests() { return load('req_requests', []); }
-    function setRequests(arr) { save('req_requests', arr); }
+    function setRequests(arr) {
+      save('req_requests', arr);
+      if (arr && arr.length) arr.forEach(r => syncRequestToSupabase(r));
+    }
     function getEvents() { return load('req_events', []); }
-    function setEvents(arr) { save('req_events', arr); }
+    function setEvents(arr) {
+      save('req_events', arr);
+      if (arr && arr.length) arr.forEach(e => syncEventToSupabase(e));
+    }
     function getAccounts() { return load('req_accounts', []); }
     function getBudgets() {
       return load('req_budgets', { Sales: 0, 'R and D': 0, Executive: 0, Engineering: 0, Finance: 0 });
@@ -1200,6 +1430,7 @@
         };
         accounts.push(account);
         save('req_accounts', accounts);
+        syncAccountToSupabase(account);
         form.reset();
         enterApp(account);
         toast('Account created. You are signed in.', 'success');
@@ -1875,6 +2106,7 @@
       if (!confirm('Delete this activity?')) return;
       let list = getEvents().filter(e => e.id !== viewingEventId);
       setEvents(list);
+      deleteEventFromSupabase(viewingEventId);
       addAuditLog('Activity deleted', viewingEventId, viewingEventId, currentUser.id);
       closeViewEventModal();
       toast('Activity deleted', 'success');
@@ -2152,6 +2384,7 @@
         return;
       }
       save('req_accounts', accounts);
+      syncAccountToSupabase(account);
       currentUser.name = account.name;
       currentUser.dept = account.dept;
       document.getElementById('display-name').textContent = `${account.name} · ${account.dept}`;
@@ -2184,6 +2417,7 @@
       account.passwordSalt = createPasswordSalt();
       account.passwordHash = await derivePasswordHash(newPassword, account.passwordSalt);
       save('req_accounts', accounts);
+      syncAccountToSupabase(account);
       form.reset();
       toast('Password updated.', 'success');
     }
@@ -2200,6 +2434,7 @@
         budgets[department] = Math.max(0, Number(document.getElementById(id).value) || 0);
       });
       save('req_budgets', budgets);
+      syncBudgetsToSupabase(budgets);
       renderSettings();
       renderDashboard();
       toast('Department budgets saved.', 'success');
@@ -2246,14 +2481,18 @@
 
     function addAuditLog(action, description, entityId, relatedUserId) {
       const entries = getAuditLog();
-      entries.unshift({ id: uid(), action, description, entityId, relatedUserId, actorId: currentUser && currentUser.id, actor: currentUser ? currentUser.name : 'System', at: new Date().toISOString() });
+      const log = { id: uid(), action, description, entityId, relatedUserId, actorId: currentUser && currentUser.id, actor: currentUser ? currentUser.name : 'System', at: new Date().toISOString() };
+      entries.unshift(log);
       save('req_audit_log', entries.slice(0, 500));
+      syncAuditLogToSupabase(log);
     }
 
     function notifyUser(userId, title, message, requestId) {
       const notifications = getNotifications();
-      notifications.unshift({ id: uid(), userId, title, message, requestId, createdAt: new Date().toISOString(), read: false });
+      const notif = { id: uid(), userId, title, message, requestId, createdAt: new Date().toISOString(), read: false };
+      notifications.unshift(notif);
       save('req_notifications', notifications.slice(0, 200));
+      syncNotificationToSupabase(notif);
       if (currentUser && currentUser.id === userId) updateNotificationBadge();
       if (currentUser && currentUser.id === userId && getUserPreferences().browserNotifications && 'Notification' in window && Notification.permission === 'granted' && document.visibilityState === 'hidden') {
         new Notification(title, { body: message });
